@@ -8,15 +8,30 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @State var trackers: [String] = []
+    
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        NavigationStack {
+            VStack {
+                List {
+                    ForEach(trackers, id: \.self) { tracker in
+                        Text(tracker)
+                    }
+                }
+                .listStyle(.insetGrouped)
+            }
+            .navigationTitle("The Bruckner Device")
+            .toolbar {
+                Button(action: {
+                    trackers.append("new tracker")
+                }, label: {
+                    Text("New Tracker")
+                })
+            }
         }
-        .padding()
     }
+        
 }
 
 #Preview {
