@@ -1,8 +1,10 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, SafeAreaView, ScrollView } from 'react-native';
 import { useState } from 'react';
 import { AntDesign } from '@expo/vector-icons';
-import { NewDeviceModal } from './src/components/NewDeviceModal';
+import NewDeviceSheet from './src/components/NewDeviceSheet';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 // Define the TimePoint type
 type TimePoint = {
@@ -20,7 +22,7 @@ type Item = {
 
 export default function App() {
   const [items, setItems] = useState<Item[]>([]);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const addNewItem = (name: string, duration: number, points: TimePoint[]) => {
     const newItem: Item = {
@@ -41,26 +43,37 @@ export default function App() {
   );
 
   return (
-    <View style={styles.container}>
-      <FlatList
-        data={items}
-        renderItem={renderItem}
-        keyExtractor={item => item.id}
-        style={styles.list}
-      />
-      <TouchableOpacity style={styles.addButton} onPress={() => setModalVisible(true)}>
-        <View style={styles.buttonContent}>
-          <Text style={styles.addButtonText}>New Device</Text>
-          <AntDesign name="plus" size={20} color="white" style={styles.icon} />
-        </View>
-      </TouchableOpacity>
-      <NewDeviceModal
-        visible={modalVisible}
-        onClose={() => setModalVisible(false)}
-        onSave={addNewItem}
-      />
-      <StatusBar style="auto" />
-    </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BottomSheetModalProvider>
+        <SafeAreaView style={styles.container}>
+          <Text style={styles.headerText}>Bruckner Device</Text>
+          <FlatList
+            data={items}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContainer}
+          />
+          <TouchableOpacity 
+            style={styles.addButton} 
+            onPress={() => {
+              console.log('Button pressed');
+              setIsOpen(true);
+            }}
+          >
+            <View style={styles.buttonContent}>
+              <Text style={styles.addButtonText}>New Device</Text>
+              <AntDesign name="plus" size={20} color="white" style={styles.icon} />
+            </View>
+          </TouchableOpacity>
+          <NewDeviceSheet
+            isOpen={isOpen}
+            onClose={() => setIsOpen(false)}
+            onSave={addNewItem}
+          />
+          <StatusBar style="auto" />
+        </SafeAreaView>
+      </BottomSheetModalProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -70,9 +83,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingTop: 40,
   },
-  list: {
-    flex: 1,
-    width: '100%',
+  listContainer: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   itemContainer: {
     padding: 16,
@@ -101,5 +114,11 @@ const styles = StyleSheet.create({
   },
   icon: {
     marginLeft: 8,
+  },
+  headerText: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 24,
   },
 });

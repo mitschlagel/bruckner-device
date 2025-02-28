@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import {
   Modal,
   View,
@@ -9,7 +9,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { AntDesign } from '@expo/vector-icons';
-import { FormControl, FormLabel, Input, Heading } from '@chakra-ui/react';
+import { BottomSheetModal, BottomSheetBackdrop, BottomSheetBackdropProps } from '@gorhom/bottom-sheet';
 
 type TimePoint = {
   time: number;  // Time in minutes from start
@@ -17,12 +17,35 @@ type TimePoint = {
 };
 
 type NewDeviceModalProps = {
-  visible: boolean;
+  isOpen: boolean;
   onClose: () => void;
   onSave: (name: string, duration: number, points: TimePoint[]) => void;
 };
 
-export function NewDeviceModal({ visible, onClose, onSave }: NewDeviceModalProps) {
+const NewDeviceSheet = ({ isOpen, onClose, onSave }: NewDeviceModalProps) => {
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+  const snapPoints = useMemo(() => ['50%', '75%'], []);
+
+  useEffect(() => {
+    console.log('Effect triggered, isOpen:', isOpen);
+    if (isOpen) {
+      bottomSheetModalRef.current?.present();
+    } else {
+      bottomSheetModalRef.current?.dismiss();
+    }
+  }, [isOpen]);
+
+  const renderBackdrop = useCallback(
+    (props: BottomSheetBackdropProps) => (
+      <BottomSheetBackdrop
+        {...props}
+        appearsOnIndex={0}
+        disappearsOnIndex={-1}
+      />
+    ),
+    []
+  );
+
   const [name, setName] = useState('');
   const [duration, setDuration] = useState('');
   const [timePoint, setTimePoint] = useState('');
@@ -58,9 +81,14 @@ export function NewDeviceModal({ visible, onClose, onSave }: NewDeviceModalProps
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent>
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
+      <BottomSheetModal
+        ref={bottomSheetModalRef}
+        index={0}
+        snapPoints={snapPoints}
+        backdropComponent={renderBackdrop}
+        onDismiss={onClose}
+      >
+        <View style={styles.contentContainer}>
           <View style={styles.header}>
             <Text style={styles.title}>New Device</Text>
             <TouchableOpacity onPress={onClose}>
@@ -81,7 +109,7 @@ export function NewDeviceModal({ visible, onClose, onSave }: NewDeviceModalProps
             value={duration}
             onChangeText={setDuration}
           />
-          <Heading size="md" mb={4}>Add New Reminder</Heading>
+          <Text style={styles.subTitle}>Add New Reminder</Text>
 
           <View style={styles.timePointContainer}>
             <TextInput
@@ -114,23 +142,14 @@ export function NewDeviceModal({ visible, onClose, onSave }: NewDeviceModalProps
             <Text style={styles.saveButtonText}>Save Device</Text>
           </TouchableOpacity>
         </View>
-      </View>
-    </Modal>
+      </BottomSheetModal>
   );
-}
+};
 
 const styles = StyleSheet.create({
-  modalContainer: {
+  contentContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  modalContent: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 20,
-    maxHeight: '80%',
+    padding: 16,
   },
   header: {
     flexDirection: 'row',
@@ -141,6 +160,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 20,
     fontWeight: 'bold',
+  },
+  subTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
   },
   input: {
     borderWidth: 1,
@@ -189,4 +213,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-}); 
+});
+
+export default NewDeviceSheet; 
