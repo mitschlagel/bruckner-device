@@ -1,63 +1,80 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity } from 'react-native';
+import React, { useState, useCallback, useRef, useMemo } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, FlatList, Button } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import {
+  BottomSheetModal,
+  BottomSheetView,
+  BottomSheetModalProvider,
+} from '@gorhom/bottom-sheet';
 
-const deviceList = [];
+type Device = {
+  id: string;
+  name: string;
+  type: string;
+}
+import styles from '../../styles/MainScreenStyles';
 
-export default function MainScreen() {
+const initialDeviceList: Device[] = [];
+
+const MainScreen = () => {
+  // ref
+  const bottomSheetModalRef = useRef<BottomSheetModal>(null);
+
+  // callbacks
+  const handlePresentModalPress = useCallback(() => {
+    bottomSheetModalRef.current?.present();
+  }, []);
+  const handleSheetChanges = useCallback((index: number) => {
+    initialDeviceList.push({
+      id: '1',
+      name: 'iPhone 12 Pro',
+      type: 'Smartphone',
+    });
+  }, []);
+
+  // renders
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Bruckner Device</Text>
-      {deviceList.length === 0 ? (
-       <Text>No Devices Found</Text>
-       ) : (
-        <Text>Device List</Text>
-       )        
-      }
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.button} onPress={() => alert('Button Pressed')}>
-        <Text style={styles.buttonText}>New</Text>
-        <Ionicons name="add" size={24} color="white" />
-        </TouchableOpacity>
-      </View>
-    </View>
+      <GestureHandlerRootView style={styles.container}>
+        <BottomSheetModalProvider>
+          <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={handlePresentModalPress}
+          >
+            <Text style={styles.buttonText}>New Device</Text>
+            <Ionicons name="add" size={24} color="white" />
+          </TouchableOpacity>
+          </View>
+          
+          <BottomSheetModal
+            ref={bottomSheetModalRef}
+            onChange={handleSheetChanges}
+          >
+            <BottomSheetView style={styles.contentContainer}>
+              <Text style={{paddingBottom: 200}}>Awesome 🎉</Text>
+            </BottomSheetView>
+        </BottomSheetModal>
+        </BottomSheetModalProvider>
+    </GestureHandlerRootView>
+  );
+};
+
+const DeviceList: React.FC<{ deviceList: Device[] }> = ({ deviceList }) => {
+  return (
+    <FlatList
+      style={styles.list}
+      contentContainerStyle={styles.listContent}
+      data={deviceList}
+      renderItem={({ item }) => (
+        <View style={styles.listItem}>
+          <Text>{item.name}</Text>
+          <Text>{item.type}</Text>
+        </View>
+      )}
+      keyExtractor={(item) => item.id}
+    />
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  title: {
-    position: 'absolute',
-    top: 80,
-    fontSize: 32,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  buttonContainer: {
-    position: 'absolute',
-    bottom: 30,
-    width: '100%',
-    alignItems: 'center',
-    paddingHorizontal: 36,
-  },
-  button: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#ff0055',
-    padding: 16,
-    borderRadius: 8,
-    width: '100%'
-  },
-  buttonText: {
-    color: 'white',
-    marginRight: 12,
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-});
+export default MainScreen;
